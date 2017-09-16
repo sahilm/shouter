@@ -9,8 +9,9 @@ import (
 )
 
 type Server struct {
-	Addr        string
-	IdleTimeout time.Duration
+	Addr          string
+	IdleTimeout   time.Duration
+	MaxReadBuffer int64
 }
 
 func (srv Server) ListenAndServe() error {
@@ -32,8 +33,9 @@ func (srv Server) ListenAndServe() error {
 		log.Printf("accepted connection from %v", newConn.RemoteAddr())
 
 		conn := &Conn{
-			Conn:        newConn,
-			IdleTimeout: srv.IdleTimeout,
+			Conn:          newConn,
+			IdleTimeout:   srv.IdleTimeout,
+			MaxReadBuffer: srv.MaxReadBuffer,
 		}
 		conn.SetDeadline(time.Now().Add(conn.IdleTimeout))
 		go handle(conn)

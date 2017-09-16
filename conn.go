@@ -1,6 +1,7 @@
 package shouter
 
 import (
+	"io"
 	"net"
 	"time"
 )
@@ -8,7 +9,8 @@ import (
 type Conn struct {
 	net.Conn
 
-	IdleTimeout time.Duration
+	IdleTimeout   time.Duration
+	MaxReadBuffer int64
 }
 
 func (c *Conn) Write(p []byte) (n int, err error) {
@@ -19,7 +21,8 @@ func (c *Conn) Write(p []byte) (n int, err error) {
 
 func (c *Conn) Read(b []byte) (n int, err error) {
 	c.updateDeadline()
-	n, err = c.Conn.Read(b)
+	r := io.LimitReader(c.Conn, c.MaxReadBuffer)
+	n, err = r.Read(b)
 	return
 }
 
