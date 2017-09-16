@@ -5,10 +5,12 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 )
 
 type Server struct {
-	Addr string
+	Addr        string
+	IdleTimeout time.Duration
 }
 
 func (srv Server) ListenAndServe() error {
@@ -23,11 +25,17 @@ func (srv Server) ListenAndServe() error {
 	}
 	defer listener.Close()
 	for {
-		conn, err := listener.Accept()
+		newConn, err := listener.Accept()
 		if err != nil {
 			log.Printf("error accepting connection %v", err)
 		}
-		log.Printf("accepted connection from %v", conn.RemoteAddr())
+		log.Printf("accepted connection from %v", newConn.RemoteAddr())
+
+		conn := &Conn{
+			Conn:        newConn,
+			IdleTimeout: srv.IdleTimeout,
+		}
+		conn.SetDeadline(time.Now().Add(conn.IdleTimeout))
 		go handle(conn)
 	}
 }
@@ -44,7 +52,6 @@ func handle(conn net.Conn) error {
 		scanned := scanr.Scan()
 		if !scanned {
 			if err := scanr.Err(); err != nil {
-				log.Printf("%v(%v)", err, conn.RemoteAddr())
 				return err
 			}
 			break
