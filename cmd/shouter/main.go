@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"time"
 
 	"github.com/sahilm/shouter"
@@ -10,8 +8,11 @@ import (
 
 func main() {
 	srv := shouter.Server{
-		Addr:        ":8080",
-		IdleTimeout: 10 * time.Second,
+		Addr:         ":8080",
+		IdleTimeout:  10 * time.Second,
+		MaxReadBytes: 1000,
 	}
-	log.Fatal(srv.ListenAndServe())
+	go srv.ListenAndServe()
+	time.Sleep(10 * time.Second)
+	srv.Shutdown()
 }
