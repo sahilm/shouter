@@ -33,6 +33,7 @@ func (srv *Server) ListenAndServe() error {
 	defer listener.Close()
 	srv.listener = listener
 	for {
+		// should be guarded by mu
 		if srv.inShutdown {
 			break
 		}
@@ -93,6 +94,7 @@ func (srv *Server) deleteConn(conn *conn) {
 }
 
 func (srv *Server) Shutdown() {
+	// should be guarded by mu
 	srv.inShutdown = true
 	log.Println("shutting down...")
 	srv.listener.Close()
