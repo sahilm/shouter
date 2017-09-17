@@ -73,16 +73,27 @@ func (srv *Server) handle(conn *conn) error {
 	r := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 	scanr := bufio.NewScanner(r)
+
+	sc := make(chan bool)
+	deadline := time.After(conn.IdleTimeout)
 	for {
-		scanned := scanr.Scan()
-		if !scanned {
-			if err := scanr.Err(); err != nil {
-				return err
+		go func(s chan bool) {
+			s <- scanr.Scan()
+		}(sc)
+		select {
+		case <-deadline:
+			return nil
+		case scanned := <-sc:
+			if !scanned {
+				if err := scanr.Err(); err != nil {
+					return err
+				}
+				return nil
 			}
-			break
+			w.WriteString(strings.ToUpper(scanr.Text()) + "\n")
+			w.Flush()
+			deadline = time.After(conn.IdleTimeout)
 		}
-		w.WriteString(strings.ToUpper(scanr.Text()) + "\n")
-		w.Flush()
 	}
 	return nil
 }

@@ -14,5 +14,6 @@ func main() {
 	}
 	go srv.ListenAndServe()
 	time.Sleep(10 * time.Second)
-	srv.Shutdown()
+	//srv.Shutdown()
+	select {}
 }
